@@ -46,6 +46,10 @@ public class Game extends Canvas implements Runnable {
 
     private ArrayList<Platform> platforms = new ArrayList<>();
 
+    private ArrayList<Enemy> enemies = new ArrayList<>();
+    private boolean gameOver = false;
+
+
 
     public Game() {
         JFrame frame = new JFrame("The Chill Guy");
@@ -70,6 +74,10 @@ public class Game extends Canvas implements Runnable {
                         velocityY = jumpStrength;
                         jumping = true;
                     }
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_R && gameOver) {
+                    restartGame();
                 }
 
             }
@@ -99,6 +107,11 @@ public class Game extends Canvas implements Runnable {
         coins.add(new Coin(420, 320)); // on second
         coins.add(new Coin(620, 270)); // on third
 
+        // Walking on the ground
+        enemies.add(new Enemy(300, 510, 300, 500)); // patrol between x=300 and x=500
+
+        // On 2nd platform (430x320)
+        enemies.add(new Enemy(430, 310, 430, 550)); // patrol between platform edges
 
     }
 
@@ -119,6 +132,34 @@ public class Game extends Canvas implements Runnable {
         }
     }
 
+    private void restartGame() {
+        // Reset player
+        playerX = 100;
+        playerY = 500;
+        velocityY = 0;
+        jumping = false;
+
+        // Reset score
+        score = 0;
+
+        // Reset enemies
+        enemies.clear();
+        enemies.add(new Enemy(300, 510, 300, 500));
+        enemies.add(new Enemy(430, 310, 430, 550));
+
+        // Reset coins
+        coins.clear();
+        coins.add(new Coin(220, 420));
+        coins.add(new Coin(420, 320));
+        coins.add(new Coin(620, 270));
+
+        // Clear game over state
+        gameOver = false;
+
+        System.out.println("Game restarted!");
+    }
+
+
     public void run() {
         // Game loop
         this.createBufferStrategy(3); // triple buffering
@@ -137,6 +178,8 @@ public class Game extends Canvas implements Runnable {
     }
 
     private void update() {
+
+        if (gameOver) return;
         if (movingLeft) {
             playerX -= playerSpeed;
         }
@@ -181,8 +224,6 @@ public class Game extends Canvas implements Runnable {
         }
 
 
-//        Rectangle playerBounds = new Rectangle(playerX, playerY, playerWidth, playerHeight);
-
         for (Coin coin : coins) {
             if (!coin.collected && playerBounds.intersects(coin.getBounds())) {
                 coin.collected = true;
@@ -191,13 +232,35 @@ public class Game extends Canvas implements Runnable {
             }
         }
 
+        for (Enemy enemy : enemies) {
+            if (!enemy.alive) continue;
 
-// Check ground collision
+            Rectangle enemyBounds = enemy.getBounds();
+
+            if (playerBounds.intersects(enemyBounds)) {
+                if (velocityY > 0 && playerY + playerHeight - velocityY <= enemy.y) {
+                    enemy.alive = false;
+                    velocityY = jumpStrength / 2;
+                    System.out.println("Enemy defeated!");
+                } else {
+                    gameOver = true;
+                    System.out.println("Ouch! You were hit by an enemy!");
+                }
+            }
+        }
+
+
+        // Check ground collision
         if (playerY + playerHeight >= groundY) {
             playerY = groundY - playerHeight;
             velocityY = 0;
             jumping = false;
         }
+
+        for (Enemy enemy : enemies) {
+            enemy.update();
+        }
+
     }
 
     private void render(BufferStrategy bs) {
@@ -217,10 +280,23 @@ public class Game extends Canvas implements Runnable {
             coin.draw(g);
         }
 
+        for (Enemy enemy : enemies) {
+            enemy.draw(g);
+        }
+
+        if (gameOver) {
+            g.setColor(Color.RED);
+            g.setFont(new Font("Arial", Font.BOLD, 40));
+            g.drawString("GAME OVER", 300, 200);
+
+            g.setFont(new Font("Arial", Font.PLAIN, 20));
+            g.drawString("Press R to restart", 310, 240);
+
+        }
+
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 20));
         g.drawString("Score: " + score, 20, 40);
-
 
         g.dispose();
         bs.show();
