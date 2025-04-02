@@ -49,7 +49,9 @@ public class Game extends Canvas implements Runnable {
     private ArrayList<Enemy> enemies = new ArrayList<>();
     private boolean gameOver = false;
 
+    private int cameraX = 0;
 
+    private Image backgroundImage;
 
     public Game() {
         JFrame frame = new JFrame("The Chill Guy");
@@ -79,7 +81,6 @@ public class Game extends Canvas implements Runnable {
                 if (e.getKeyCode() == KeyEvent.VK_R && gameOver) {
                     restartGame();
                 }
-
             }
 
             @Override
@@ -111,7 +112,15 @@ public class Game extends Canvas implements Runnable {
         enemies.add(new Enemy(300, 510, 300, 500)); // patrol between x=300 and x=500
 
         // On 2nd platform (430x320)
-        enemies.add(new Enemy(430, 310, 430, 550)); // patrol between platform edges
+        enemies.add(new Enemy(430, 310, 430, 550));
+
+        try {
+            backgroundImage = ImageIO.read(new File("res/bg.png")); // replace with your file
+        } catch (IOException e) {
+            System.out.println("Failed to load background.");
+            e.printStackTrace();
+        }
+// patrol between platform edges
 
     }
 
@@ -180,6 +189,8 @@ public class Game extends Canvas implements Runnable {
     private void update() {
 
         if (gameOver) return;
+        cameraX = playerX - 400; // 400 = half the screen width
+
         if (movingLeft) {
             playerX -= playerSpeed;
         }
@@ -223,6 +234,8 @@ public class Game extends Canvas implements Runnable {
             }
         }
 
+        int bgWidth = backgroundImage.getWidth(null);
+        cameraX = Math.max(0, Math.min(playerX - 400, bgWidth - getWidth()));
 
         for (Coin coin : coins) {
             if (!coin.collected && playerBounds.intersects(coin.getBounds())) {
@@ -260,28 +273,44 @@ public class Game extends Canvas implements Runnable {
         for (Enemy enemy : enemies) {
             enemy.update();
         }
-
     }
 
     private void render(BufferStrategy bs) {
+
         Graphics g = bs.getDrawGraphics();
-        g.setColor(Color.CYAN);
-        g.fillRect(0, 0, getWidth(), getHeight()); // clear screen
-        g.drawImage(playerSprite, playerX, playerY, playerWidth, playerHeight, null);
+
+        if (backgroundImage != null) {
+            int bgWidth = backgroundImage.getWidth(null);
+            int bgHeight = backgroundImage.getHeight(null);
+
+            // Scale to match window height
+            g.drawImage(backgroundImage, -cameraX, 0, bgWidth, getHeight(), null);
+        } else {
+            g.setColor(Color.CYAN);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+
+
+
+//        cameraX = Math.max(0, Math.min(playerX - 400, backgroundImage.getWidth(null) - 800));
+
+//        g.setColor(Color.CYAN);
+//        g.fillRect(0, 0, getWidth(), getHeight()); // clear screen
+        g.drawImage(playerSprite, playerX - cameraX, playerY, playerWidth, playerHeight, null);
 
         // Ground
         g.setColor(Color.GREEN);
         g.fillRect(0, groundY, getWidth(), getHeight() - groundY);
 
         for (Platform platform : platforms) {
-            platform.draw(g);
+            platform.draw(g, cameraX);
         }
         for (Coin coin : coins) {
-            coin.draw(g);
+            coin.draw(g, cameraX);
         }
 
         for (Enemy enemy : enemies) {
-            enemy.draw(g);
+            enemy.draw(g, cameraX);
         }
 
         if (gameOver) {
@@ -293,6 +322,8 @@ public class Game extends Canvas implements Runnable {
             g.drawString("Press R to restart", 310, 240);
 
         }
+
+//        g.drawImage(backgroundImage, -cameraX / 2, 0, null);
 
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 20));
