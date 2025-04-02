@@ -47,16 +47,17 @@ public class Enemy {
         }
     }
 
-    public void draw(Graphics g) {
+    public void draw(Graphics g, int cameraX) {
         if (!alive) return;
 
         if (sprite != null) {
-            g.drawImage(sprite, x, y, width, height, null);
+            g.drawImage(sprite, x - cameraX, y, width, height, null);
         } else {
-            g.setColor(Color.MAGENTA); // fallback if image didn't load
-            g.fillRect(x, y, width, height);
+            g.setColor(Color.RED);
+            g.fillRect(x - cameraX, y, width, height);
         }
     }
+
 
 
     public Rectangle getBounds() {

@@ -10,12 +10,13 @@ public class Coin {
         this.y = y;
     }
 
-    public void draw(Graphics g) {
+    public void draw(Graphics g, int cameraX) {
         if (!collected) {
             g.setColor(Color.YELLOW);
-            g.fillOval(x, y, size, size);
+            g.fillOval(x - cameraX, y, size, size);
         }
     }
+
 
     public Rectangle getBounds() {
         return new Rectangle(x, y, size, size);
