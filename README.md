@@ -47,6 +47,13 @@ java Main
 
 - Save/load system
 
+## Snapshots
+
+![image](https://github.com/user-attachments/assets/5026178a-79db-477a-a62f-354ff65dedf0)
+![image](https://github.com/user-attachments/assets/60964576-ec54-4ce0-8093-b06a70aca0d9)
+![image](https://github.com/user-attachments/assets/721ee80a-3a4c-4a37-b352-42894de7d258)
+
+
 ## ❤️ Credits
 *Made with love (and lots of debugging)*
 *by Ishita — 2025*
